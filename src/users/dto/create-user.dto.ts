@@ -8,7 +8,7 @@ import {
 import mongoose from 'mongoose';
 import { Type } from 'class-transformer';
 
-class Company {
+export class CompanyValidate {
   @IsNotEmpty()
   _id: mongoose.Schema.Types.ObjectId;
 
@@ -42,8 +42,8 @@ export class CreateUserDto {
   @IsNotEmptyObject()
   @IsObject()
   @ValidateNested()
-  @Type(() => Company)
-  company: Company;
+  @Type(() => CompanyValidate)
+  company: CompanyValidate;
 }
 
 export class RegisterUserDto {

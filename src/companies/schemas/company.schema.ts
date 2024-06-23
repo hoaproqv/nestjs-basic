@@ -1,8 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
-import { IUser } from '../../users/schemas/user.schema';
+import mongoose, { HydratedDocument } from 'mongoose';
+import { IUserSchema } from '../../users/schemas/user.schema';
 
 export type CompanyDocument = HydratedDocument<Company>;
+
+export class ICompanySchema {
+  _id: mongoose.Schema.Types.ObjectId;
+  name: string;
+  logo: string;
+}
 
 @Schema({ timestamps: true })
 export class Company {
@@ -15,14 +21,17 @@ export class Company {
   @Prop()
   description: string;
 
-  @Prop({ type: IUser })
-  createdBy: IUser;
+  @Prop()
+  logo: string;
 
-  @Prop({ type: IUser })
-  updatedBy: IUser;
+  @Prop({ type: Object })
+  createdBy: IUserSchema;
 
-  @Prop({ type: IUser })
-  deletedBy: IUser;
+  @Prop({ type: Object })
+  updatedBy: IUserSchema;
+
+  @Prop({ type: Object })
+  deletedBy: IUserSchema;
 
   @Prop()
   createdAt: Date;

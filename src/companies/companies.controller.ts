@@ -14,6 +14,7 @@ import { UpdateCompanyDto } from './dto/update-company.dto';
 import { User } from '../decorators/user.decorator';
 import { IUser } from '../users/users.interface';
 import { ResponseMessage } from '../decorators/message.decorator';
+import { Public } from '../decorators/isPublic.decorator';
 
 @Controller('companies')
 export class CompaniesController {
@@ -24,6 +25,7 @@ export class CompaniesController {
     return this.companiesService.create(createCompanyDto, user);
   }
 
+  @Public()
   @Get()
   @ResponseMessage('Get all companies')
   findAll(
@@ -34,9 +36,10 @@ export class CompaniesController {
     return this.companiesService.findAll(+currentPage, +limit, qs);
   }
 
+  @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.companiesService.findOne(+id);
+    return this.companiesService.findOne(id);
   }
 
   @Patch(':id')

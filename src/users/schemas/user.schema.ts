@@ -1,9 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
+import { ICompanySchema } from '../../companies/schemas/company.schema';
 
 export type UserDocument = HydratedDocument<User>;
 
-export class IUser {
+export class IUserSchema {
   _id: mongoose.Schema.Types.ObjectId;
   email: string;
 }
@@ -32,22 +33,19 @@ export class User {
   role: string;
 
   @Prop({ type: Object })
-  company: {
-    _id: mongoose.Schema.Types.ObjectId;
-    name: string;
-  };
+  company: ICompanySchema;
 
   @Prop()
   refreshToken: string;
 
-  @Prop({ type: IUser })
-  createdBy: IUser;
+  @Prop({ type: Object })
+  createdBy: IUserSchema;
 
-  @Prop({ type: IUser })
-  updatedBy: IUser;
+  @Prop({ type: Object })
+  updatedBy: IUserSchema;
 
-  @Prop({ type: IUser })
-  deletedBy: IUser;
+  @Prop({ type: Object })
+  deletedBy: IUserSchema;
 
   @Prop()
   createdAt: Date;

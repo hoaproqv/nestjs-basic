@@ -1,27 +1,26 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CreateCompanyDto } from './dto/create-company.dto';
-import { UpdateCompanyDto } from './dto/update-company.dto';
-import { Company, CompanyDocument } from './schemas/company.schema';
-import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
+import { CreateJobDto } from './dto/create-job.dto';
+import { UpdateJobDto } from './dto/update-job.dto';
+import { Job, JobDocument } from './schemas/job.schema';
 import { InjectModel } from '@nestjs/mongoose';
+import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { IUser } from '../users/users.interface';
 import mongoose from 'mongoose';
 import aqp from 'api-query-params';
 
 @Injectable()
-export class CompaniesService {
+export class JobsService {
   constructor(
-    @InjectModel(Company.name)
-    private companyModel: SoftDeleteModel<CompanyDocument>,
+    @InjectModel(Job.name) private jobModel: SoftDeleteModel<JobDocument>,
   ) {}
 
-  create(createCompanyDto: CreateCompanyDto, user: IUser) {
-    return this.companyModel.create({
-      ...createCompanyDto,
+  create(createJobDto: CreateJobDto, user: IUser) {
+    return this.jobModel.create({
       createdBy: {
         _id: user._id,
         email: user.email,
       },
+      ...createJobDto,
     });
   }
 
@@ -32,10 +31,10 @@ export class CompaniesService {
 
     let offset = (currentPage - 1) * limit;
     let defaultLimit = limit ? limit : 10;
-    const totalItems = (await this.companyModel.find(filter)).length;
+    const totalItems = (await this.jobModel.find(filter)).length;
     const totalPages = Math.ceil(totalItems / defaultLimit);
 
-    const result = await this.companyModel
+    const result = await this.jobModel
       .find(filter)
       .skip(offset)
       .limit(defaultLimit)
@@ -56,41 +55,36 @@ export class CompaniesService {
 
   findOne(id: string) {
     if (!mongoose.Types.ObjectId.isValid(id))
-      throw new BadRequestException(`Not found company with id=${id}`);
-
-    return this.companyModel.findOne({ _id: id }).lean();
+      throw new BadRequestException(`Not found job with id=${id}`);
+    return this.jobModel.findById(id);
   }
 
-  update(id: string, updateCompanyDto: UpdateCompanyDto, user: IUser) {
+  update(id: string, updateJobDto: UpdateJobDto, user: IUser) {
     if (!mongoose.Types.ObjectId.isValid(id))
-      throw new BadRequestException(`Not found company with id=${id}`);
+      throw new BadRequestException(`Not found job with id=${id}`);
 
-    return this.companyModel.updateOne(
+    return this.jobModel.findOneAndUpdate(
       { _id: id },
       {
-        ...updateCompanyDto,
         updatedBy: {
           _id: user._id,
           email: user.email,
         },
+        ...updateJobDto,
       },
+      { new: true },
     );
   }
 
   async remove(id: string, user: IUser) {
     if (!mongoose.Types.ObjectId.isValid(id))
-      throw new BadRequestException(`Not found company with id=${id}`);
+      throw new BadRequestException(`Not found job with id=${id}`);
 
-    await this.companyModel.updateOne(
+    await this.jobModel.updateOne(
       { _id: id },
-      {
-        deletedBy: {
-          _id: user._id,
-          email: user.email,
-        },
-      },
+      { deletedBy: { _id: user._id, email: user.email } },
     );
 
-    return this.companyModel.softDelete({ _id: id });
+    return this.jobModel.softDelete({ _id: id });
   }
 }

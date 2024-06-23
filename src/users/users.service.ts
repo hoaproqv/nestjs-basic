@@ -28,6 +28,7 @@ export class UsersService {
     const isExist = await this.userModel.findOne({
       email: createUserDto.email,
     });
+
     if (isExist)
       throw new BadRequestException(
         `Email ${createUserDto.email} already exists`,
@@ -90,7 +91,8 @@ export class UsersService {
   }
 
   findOne(id: string) {
-    if (!mongoose.Types.ObjectId.isValid(id)) return 'Not found user';
+    if (!mongoose.Types.ObjectId.isValid(id))
+      throw new BadRequestException(`Not found user with id=${id}`);
     return this.userModel.findOne({ _id: id }).lean();
   }
 
@@ -98,10 +100,10 @@ export class UsersService {
     return this.userModel.findOne({ email: username });
   }
 
-  update(updateUserDto: UpdateUserDto, user: IUser) {
+  update(id: string, updateUserDto: UpdateUserDto, user: IUser) {
     return this.userModel
       .findOneAndUpdate(
-        { _id: updateUserDto._id },
+        { _id: id },
         {
           updateBy: {
             _id: user._id,
@@ -115,7 +117,8 @@ export class UsersService {
   }
 
   async remove(id: string, user: IUser) {
-    if (!mongoose.Types.ObjectId.isValid(id)) return 'Not found user';
+    if (!mongoose.Types.ObjectId.isValid(id))
+      throw new BadRequestException(`Not found user with id=${id}`);
 
     await this.userModel.updateOne(
       { _id: id },
@@ -124,8 +127,11 @@ export class UsersService {
     return this.userModel.softDelete({ _id: id });
   }
 
-  updateUserToken(refreshToken: string, _id: string) {
-    return this.userModel.updateOne({ _id }, { refreshToken });
+  updateUserToken(refreshToken: string, id: string) {
+    if (!mongoose.Types.ObjectId.isValid(id))
+      throw new BadRequestException(`Not found user with id=${id}`);
+
+    return this.userModel.updateOne({ _id: id }, { refreshToken });
   }
 
   findUserByRefreshToken(refreshToken: string) {
