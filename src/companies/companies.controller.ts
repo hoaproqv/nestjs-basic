@@ -15,7 +15,9 @@ import { User } from '../decorators/user.decorator';
 import { IUser } from '../users/users.interface';
 import { ResponseMessage } from '../decorators/message.decorator';
 import { Public } from '../decorators/isPublic.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Companies')
 @Controller('companies')
 export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}

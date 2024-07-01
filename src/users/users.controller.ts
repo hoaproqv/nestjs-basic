@@ -15,13 +15,16 @@ import { Public } from '../decorators/isPublic.decorator';
 import { ResponseMessage } from '../decorators/message.decorator';
 import { User } from '../decorators/user.decorator';
 import { IUser } from './users.interface';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ResponseMessage('Create a user')
   @Post()
+  @ResponseMessage('Create a user')
+  @ApiBody({ type: CreateUserDto })
   create(@Body() createUserDto: CreateUserDto, @User() user: IUser) {
     return this.usersService.create(createUserDto, user);
   }
@@ -41,7 +44,8 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
-  @Patch()
+  @Patch(':id')
+  @ApiBody({ type: UpdateUserDto })
   update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,

@@ -8,11 +8,15 @@ import { compareSync, genSaltSync, hashSync } from 'bcryptjs';
 import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { IUser } from './users.interface';
 import aqp from 'api-query-params';
+import { Role, RoleDocument } from '../roles/schemas/role.schema';
+import { USER_ROLE } from '../databases/sample';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>,
+
+    @InjectModel(Role.name) private roleModel: SoftDeleteModel<RoleDocument>,
   ) {}
 
   getHashPassword = (password: string) => {
@@ -54,9 +58,13 @@ export class UsersService {
         `Email ${registerUserDto.email} already exists`,
       );
 
+    const userRole = await this.roleModel.findOne({ name: USER_ROLE });
+
     registerUserDto.password = this.getHashPassword(registerUserDto.password);
-    registerUserDto.role = 'USER';
-    const result = await this.userModel.create(registerUserDto);
+    const result = await this.userModel.create({
+      ...registerUserDto,
+      role: userRole?._id,
+    });
     const { password, ...data } = result.toObject();
     return data;
   }
@@ -93,11 +101,20 @@ export class UsersService {
   findOne(id: string) {
     if (!mongoose.Types.ObjectId.isValid(id))
       throw new BadRequestException(`Not found user with id=${id}`);
-    return this.userModel.findOne({ _id: id }).lean();
+    return this.userModel
+      .findOne({ _id: id })
+      .lean()
+      .populate({
+        path: 'role',
+        select: { name: 1, _id: 1 },
+      });
   }
 
   findOneByUserName(username: string) {
-    return this.userModel.findOne({ email: username });
+    return this.userModel.findOne({ email: username }).populate({
+      path: 'role',
+      select: { name: 1 },
+    });
   }
 
   update(id: string, updateUserDto: UpdateUserDto, user: IUser) {
@@ -120,6 +137,11 @@ export class UsersService {
     if (!mongoose.Types.ObjectId.isValid(id))
       throw new BadRequestException(`Not found user with id=${id}`);
 
+    const foundUser = await this.userModel.findById(id);
+    if (foundUser && foundUser.email === 'hanhoa1997@email.com') {
+      throw new BadRequestException(`Can not delete admin account`);
+    }
+
     await this.userModel.updateOne(
       { _id: id },
       { deletedBy: { _id: user._id, email: user.email } },
@@ -135,6 +157,9 @@ export class UsersService {
   }
 
   findUserByRefreshToken(refreshToken: string) {
-    return this.userModel.findOne({ refreshToken });
+    return this.userModel.findOne({ refreshToken }).populate({
+      path: 'role',
+      select: { name: 1 },
+    });
   }
 }

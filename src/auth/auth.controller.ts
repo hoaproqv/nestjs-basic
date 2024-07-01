@@ -11,24 +11,34 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AuthService } from './auth.service';
 import { Public } from '../decorators/isPublic.decorator';
 import { ResponseMessage } from '../decorators/message.decorator';
-import { RegisterUserDto } from '../users/dto/create-user.dto';
+import { LoginUserDto, RegisterUserDto } from '../users/dto/create-user.dto';
 import { IUser } from '../users/users.interface';
 import { Response, Request } from 'express';
 import { User } from '../decorators/user.decorator';
+import { RolesService } from '../roles/roles.service';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private roleService: RolesService,
+  ) {}
 
   @Public()
   @UseGuards(LocalAuthGuard)
+  @UseGuards(ThrottlerGuard)
   @ResponseMessage('User login')
+  @ApiBody({ type: LoginUserDto })
   @Post('login')
-  handleLogin(
+  async handleLogin(
     @Req() req: Request & { user: IUser },
     @Res({ passthrough: true }) response: Response,
+    @Body() body: LoginUserDto,
   ) {
-    return this.authService.login(req.user, response);
+    return await this.authService.login(req.user, response);
   }
 
   @Public()
@@ -41,7 +51,9 @@ export class AuthController {
   @ResponseMessage('Get user information')
   @Get('account')
   async handleGetAccount(@User() user: IUser) {
-    return user;
+    const temp = (await this.roleService.findOne(user.role._id)) as any;
+    user.permissions = temp.permissions;
+    return { user };
   }
 
   @Public()

@@ -15,7 +15,9 @@ import { ResponseMessage } from '../decorators/message.decorator';
 import { User } from '../decorators/user.decorator';
 import { IUser } from '../users/users.interface';
 import { Public } from '../decorators/isPublic.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Jobs')
 @Controller('jobs')
 export class JobsController {
   constructor(private readonly jobsService: JobsService) {}
